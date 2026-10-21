@@ -5,7 +5,7 @@
 零依赖、零构建，纯静态 HTML / CSS / JS。
 
 - 代码仓库：<https://github.com/cccgitzh/kpxx>
-- 线上地址：<https://invoice-info.edgeone.cool>（EdgeOne Makers 项目 `invoice-info`）
+- 线上地址：<https://kpxx.edgeone.dev>（EdgeOne Makers 项目 `kpxx`，海外区）
 
 ## 功能
 
@@ -69,9 +69,11 @@ python -m http.server 8088
 
 ## 部署
 
-已通过 EdgeOne Makers 部署（静态站点，无需构建）。后续更新内容后重新部署：
+已通过 EdgeOne Makers 部署（静态站点，无需构建），线上地址 <https://kpxx.edgeone.dev>。后续更新内容后重新部署：
 
 ```bash
 npm i -g edgeone@latest
-edgeone makers deploy -n invoice-info
+edgeone makers deploy -n kpxx -a overseas
 ```
+
+> 说明：`edgeone.cool`（中国区）域名受备案策略限制，直接访问会被鉴权网关拦截返回 401，因此本项目部署在海外区（`edgeone.dev`）以获得公开可访问的地址。若要长期稳定对外，建议在控制台为项目绑定一个已完成 ICP 备案的自有域名。
