@@ -1,429 +1,544 @@
 /* ==========================================================================
- * 开票信息展示页 · 交互逻辑
- * --------------------------------------------------------------------------
- * 设计原则：每家公司渲染为独立的 <section> 节点，节点上带 data-company 标识，
- * 切换 Tab 只切换显示状态，绝不跨公司复用 DOM 或共享可变状态 —— 从结构上
- * 保证多家公司的开票信息不会混淆。
- * ========================================================================== */
+   开票与收款信息 · 交互逻辑（极简黑白方案）
+   --------------------------------------------------------------------------
+   隔离原则：每家公司渲染为独立的 <section role="tabpanel" data-company="…">，
+   切换只改 hidden，不跨公司复用 DOM、不共享可变状态，从结构上避免信息混淆。
+   ========================================================================== */
 
 (function () {
   "use strict";
 
   var DATA = window.INVOICE_DATA || { companies: [] };
-  var companies = Array.isArray(DATA.companies) ? DATA.companies.filter(isValid) : [];
+  var COMPANIES = Array.isArray(DATA.companies) ? DATA.companies.filter(valid) : [];
+  var FOOTER = DATA.footer || "信息如有变更，请以最新通知为准｜如有疑问请联系对接人员";
+  var SUBTITLE = DATA.siteSubtitle || "请按以下信息开具发票、安排付款";
 
-  var ICONS = {
-    copy:
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M15 5.5A2.5 2.5 0 0 0 12.5 3H6a3 3 0 0 0-3 3v6.5A2.5 2.5 0 0 0 5.5 15"/></svg>',
-    share:
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.4 10.8 15.6 6.2M8.4 13.2l7.2 4.6"/></svg>',
-    print:
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 9V3h10v6"/><rect x="3" y="9" width="18" height="7" rx="2"/><path d="M7 14h10v7H7z"/></svg>',
-    info:
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 7.6h.01"/></svg>',
-    check:
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 12.5 5 5L20 6.5"/></svg>',
-    link:
-      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13.5a3.6 3.6 0 0 0 5.1 0l3-3a3.6 3.6 0 0 0-5.1-5.1L11.6 6.8"/><path d="M14 10.5a3.6 3.6 0 0 0-5.1 0l-3 3a3.6 3.6 0 0 0 5.1 5.1l1.4-1.4"/></svg>',
+  var TONE = { one: "#1266e3", two: "#12a94b", thr: "#f39200" };
+  var FONT = '-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif';
+  var MONO = '"SF Mono","JetBrains Mono",Menlo,Consolas,monospace';
+
+  var ICON = {
+    copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M15 5.5A2.5 2.5 0 0 0 12.5 3H6a3 3 0 0 0-3 3v6.5A2.5 2.5 0 0 0 5.5 15"/></svg>',
+    done: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m4 12.5 5 5L20 6.5"/></svg>',
+    image: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="m4 17 5-4.5 4 3.5 3-2.5 4 3.5"/></svg>',
+    download: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11"/><path d="m7.5 10 4.5 4.5L16.5 10"/><path d="M4 19h16"/></svg>',
+    text: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M15 5.5A2.5 2.5 0 0 0 12.5 3H6a3 3 0 0 0-3 3v6.5A2.5 2.5 0 0 0 5.5 15"/></svg>',
   };
 
-  /* ------------------------------------------------------------- 工具函数 */
+  /* ---------------------------------------------------------------- 工具 */
 
-  function isValid(company) {
-    return company && typeof company.id === "string" && company.id && company.fullName;
+  function valid(c) {
+    return c && typeof c.id === "string" && c.id && c.fullName;
   }
 
-  /** 银行账号按 4 位分组展示，复制时仍取原始纯数字 */
-  function groupAccount(raw) {
-    var digits = String(raw || "").replace(/\s+/g, "");
-    if (!/^\d+$/.test(digits)) return String(raw || "");
-    return digits.replace(/(.{4})/g, "$1 ").trim();
+  function group4(raw) {
+    var d = String(raw == null ? "" : raw).replace(/\s+/g, "");
+    if (!/^\d{6,}$/.test(d)) return String(raw == null ? "" : raw);
+    return d.replace(/(.{4})/g, "$1 ").trim();
   }
 
-  function el(tag, className, text) {
-    var node = document.createElement(tag);
-    if (className) node.className = className;
-    if (text != null) node.textContent = text;
-    return node;
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
   }
 
-  function copyText(text) {
-    if (navigator.clipboard && window.isSecureContext) {
-      return navigator.clipboard.writeText(text);
-    }
-    // file:// 或非安全上下文下的兜底方案
-    return new Promise(function (resolve, reject) {
-      var ta = document.createElement("textarea");
-      ta.value = text;
-      ta.setAttribute("readonly", "");
-      ta.style.position = "fixed";
-      ta.style.top = "-1000px";
-      ta.style.opacity = "0";
-      document.body.appendChild(ta);
-      ta.select();
-      try {
-        document.execCommand("copy") ? resolve() : reject(new Error("copy failed"));
-      } catch (err) {
-        reject(err);
-      } finally {
-        document.body.removeChild(ta);
-      }
+  /* ------------------------------------------------------------ 数据整形 */
+
+  /** 把一家公司的数据整理成「区块 + 行」的结构 */
+  function blocksOf(c) {
+    var invoiceRows = [
+      { k: "公司名称", v: c.fullName },
+      { k: "纳税人识别号", v: c.taxId, mono: true },
+      { k: "注册地址", v: c.address },
+      { k: "注册电话", v: c.phone },
+      { k: "开户银行", v: c.bankName },
+      { k: "银行账号", v: c.bankAccount, account: true },
+      { k: "税率说明", v: c.taxNote },
+    ].filter(function (r) {
+      return r.v != null && String(r.v).trim() !== "";
     });
+
+    var blocks = [
+      { title: "增值税专用发票开票信息", tone: "one", rows: invoiceRows },
+    ];
+
+    (c.receiptAccounts || []).forEach(function (acc) {
+      var rows = (acc.rows || []).map(function (r) {
+        return {
+          k: r[0],
+          v: r[1],
+          account: r[2] === "account",
+          mono: r[2] === "mono",
+        };
+      });
+      blocks.push({ title: acc.title, tone: acc.tone || "two", rows: rows });
+    });
+
+    return blocks;
   }
+
+  /** 行内展示值：账户按 4 位分组，其余原样 */
+  function displayOf(row) {
+    if (row.account) return group4(row.v);
+    return String(row.v == null ? "" : row.v);
+  }
+
+  /** 单行复制值：账户去空格纯数字，其余原样 */
+  function copyOf(row) {
+    if (row.account) return String(row.v == null ? "" : row.v).replace(/\s+/g, "");
+    return String(row.v == null ? "" : row.v);
+  }
+
+  function blockText(b) {
+    return (
+      "【" + b.title + "】\n" +
+      b.rows.map(function (r) { return r.k + "：" + displayOf(r); }).join("\n")
+    );
+  }
+
+  function fullText(c) {
+    var out = [c.fullName, SUBTITLE, ""];
+    blocksOf(c).forEach(function (b) {
+      out.push("【" + b.title + "】");
+      b.rows.forEach(function (r) { out.push(r.k + "：" + displayOf(r)); });
+      out.push("");
+    });
+    out.push(FOOTER);
+    return out.join("\n");
+  }
+
+  /* ---------------------------------------------------------------- 复制 */
 
   var toastTimer = null;
-  function toast(message) {
-    var node = document.getElementById("toast");
-    if (!node) return;
-    node.querySelector("[data-toast-text]").textContent = message;
-    node.setAttribute("data-show", "true");
+  function toast(msg) {
+    var t = document.getElementById("toast");
+    if (!t) return;
+    t.textContent = msg;
+    t.setAttribute("data-show", "true");
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () {
-      node.setAttribute("data-show", "false");
-    }, 2200);
+    toastTimer = setTimeout(function () { t.setAttribute("data-show", "false"); }, 1800);
   }
 
-  function copyWithFeedback(text, message) {
-    copyText(text).then(
-      function () {
-        toast(message || "已复制到剪贴板");
-      },
-      function () {
-        toast("复制失败，请手动选择文本");
-      }
-    );
+  function markDone(btn) {
+    if (!btn) return;
+    var html = btn.innerHTML;
+    btn.innerHTML = ICON.done;
+    btn.setAttribute("data-done", "true");
+    setTimeout(function () {
+      btn.innerHTML = html;
+      btn.removeAttribute("data-done");
+    }, 1300);
   }
 
-  /** 生成便于微信 / 邮件直接转发的纯文本 */
-  function toPlainText(company) {
-    var lines = [company.fullName];
-    if (company.englishName) lines.push(company.englishName);
-    lines.push("");
-    lines.push("纳税人识别号：" + (company.taxId || "—"));
-    if (company.taxpayerType) lines.push("纳税人资格：" + company.taxpayerType);
-    lines.push("注册地址：" + (company.address || "—"));
-    lines.push("注册电话：" + (company.phone || "—"));
-    lines.push("开户银行：" + (company.bankName || "—"));
-    lines.push("银行账号：" + (company.bankAccount || "—"));
-    if (company.invoiceTypes && company.invoiceTypes.length) {
-      lines.push("");
-      lines.push("可开具发票：");
-      company.invoiceTypes.forEach(function (type) {
-        var desc = String(type.desc || "").replace(/<[^>]+>/g, "");
-        lines.push("- " + type.name + "（税率 " + type.rate + "）" + (desc ? "：" + desc : ""));
-      });
+  function copyText(text, msg, btn) {
+    function ok() { toast(msg); markDone(btn); }
+    function fallback() {
+      var ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.cssText = "position:fixed;top:-999px;left:0;opacity:0";
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand("copy"); ok(); }
+      catch (e) { toast("复制失败，请手动选择文本"); }
+      document.body.removeChild(ta);
     }
-    if (company.notice) {
-      lines.push("");
-      lines.push("备注：" + company.notice);
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(ok, fallback);
+    } else {
+      fallback();
     }
-    return lines.join("\n");
   }
 
-  /* --------------------------------------------------------------- 渲染 */
+  /* ------------------------------------------------------------ 图片生成 */
 
-  function renderField(label, value, options) {
-    options = options || {};
-    var wrap = el("div", "field" + (options.wide ? " field--wide" : ""));
-    wrap.appendChild(el("span", "field__label", label));
-
-    var text = options.mono ? value : value || "—";
-    var p = el("p", "field__value" + (options.mono ? " field__value--mono" : ""), text);
-    wrap.appendChild(p);
-
-    if (value) {
-      var btn = el("button", "field__copy");
-      btn.type = "button";
-      btn.innerHTML = ICONS.copy;
-      btn.setAttribute("aria-label", "复制" + label);
-      btn.title = "复制" + label;
-      btn.addEventListener("click", function () {
-        copyWithFeedback(options.copyValue != null ? options.copyValue : value, label + " 已复制");
-      });
-      wrap.appendChild(btn);
-    }
-    return wrap;
-  }
-
-  function renderPanel(company, index) {
-    var section = el("section", "panel");
-    section.id = "panel-" + company.id;
-    section.setAttribute("role", "tabpanel");
-    section.setAttribute("aria-labelledby", "tab-" + company.id);
-    section.setAttribute("data-company", company.id);
-    section.tabIndex = 0;
-    section.hidden = true;
-
-    section.appendChild(el("div", "panel__accent"));
-    var body = el("div", "panel__body");
-    section.appendChild(body);
-
-    /* 1. 主体身份区：公司全称 + 纳税人识别号（视觉重心） */
-    var identity = el("div", "identity");
-    var main = el("div", "identity__main");
-
-    if (company.taxpayerType) {
-      main.appendChild(el("span", "identity__flag", company.taxpayerType));
-    }
-
-    var h2 = el("h2", "company-name", company.fullName);
-    main.appendChild(h2);
-
-    if (company.englishName) {
-      main.appendChild(el("p", "company-en", company.englishName));
-    }
-
-    if (company.taxId) {
-      var taxWrap = el("div", "taxid");
-      taxWrap.appendChild(el("span", "taxid__label", "纳税人识别号"));
-      taxWrap.appendChild(el("span", "taxid__value", company.taxId));
-
-      var taxBtn = el("button", "field__copy");
-      taxBtn.type = "button";
-      taxBtn.innerHTML = ICONS.copy;
-      taxBtn.setAttribute("aria-label", "复制纳税人识别号");
-      taxBtn.title = "复制纳税人识别号";
-      taxBtn.addEventListener("click", function () {
-        copyWithFeedback(company.taxId, "纳税人识别号已复制");
-      });
-      taxWrap.appendChild(taxBtn);
-      main.appendChild(taxWrap);
-    }
-
-    identity.appendChild(main);
-    body.appendChild(identity);
-
-    /* 2. 开票资料字段：严格取自当前 company 对象 */
-    var fields = el("div", "fields");
-    fields.appendChild(renderField("注册地址", company.address, { wide: true }));
-    fields.appendChild(renderField("注册电话", company.phone));
-    fields.appendChild(renderField("开户银行", company.bankName));
-    fields.appendChild(
-      renderField("银行账号", groupAccount(company.bankAccount), {
-        mono: true,
-        wide: true,
-        copyValue: String(company.bankAccount || "").replace(/\s+/g, ""),
-      })
-    );
-    body.appendChild(fields);
-
-    /* 3. 发票类型与税率 */
-    if (company.invoiceTypes && company.invoiceTypes.length) {
-      var head = el("div", "section-head");
-      head.appendChild(el("h3", "section-head__title", "可开具发票类型"));
-      head.appendChild(el("span", "section-head__hint", "税率以合同约定及实际开票为准"));
-      body.appendChild(head);
-
-      var list = el("div", "invoices");
-      company.invoiceTypes.forEach(function (type) {
-        var card = el("div", "invoice");
-
-        var top = el("div", "invoice__top");
-        top.appendChild(el("h4", "invoice__name", type.name));
-        if (type.rate) top.appendChild(el("span", "invoice__rate", type.rate));
-        card.appendChild(top);
-
-        if (type.desc) {
-          var desc = el("p", "invoice__desc");
-          // desc 来自同仓库的静态数据文件，允许少量行内标记（<em>）
-          desc.innerHTML = type.desc;
-          card.appendChild(desc);
+  function wrapLines(ctx, text, font, maxW) {
+    ctx.font = font;
+    var lines = [], line = "";
+    String(text).split("\n").forEach(function (seg) {
+      line = "";
+      for (var i = 0; i < seg.length; i++) {
+        var ch = seg[i];
+        if (ctx.measureText(line + ch).width > maxW && line) {
+          lines.push(line);
+          line = ch;
+        } else {
+          line += ch;
         }
-        list.appendChild(card);
-      });
-      body.appendChild(list);
-    }
-
-    /* 4. 该公司专属备注 */
-    if (company.notice) {
-      var notice = el("div", "notice");
-      notice.innerHTML = ICONS.info;
-      notice.appendChild(el("p", "", company.notice));
-      body.appendChild(notice);
-    }
-
-    /* 5. 操作区 */
-    var actions = el("div", "actions");
-
-    var btnCopy = el("button", "btn btn--primary");
-    btnCopy.type = "button";
-    btnCopy.innerHTML = ICONS.copy + "<span>复制全部信息</span>";
-    btnCopy.addEventListener("click", function () {
-      copyWithFeedback(toPlainText(company), "已复制" + company.tabName + "全部开票信息");
-    });
-    actions.appendChild(btnCopy);
-
-    var btnShare = el("button", "btn");
-    btnShare.type = "button";
-    btnShare.innerHTML = ICONS.share + "<span>转发给客户</span>";
-    btnShare.addEventListener("click", function () {
-      var text = toPlainText(company);
-      if (navigator.share) {
-        navigator.share({ title: company.fullName + " 开票信息", text: text }).catch(function () {});
-      } else {
-        copyWithFeedback(text, "当前浏览器不支持直接分享，信息已复制");
       }
+      if (line) lines.push(line);
+      if (!lines.length) lines.push("");
     });
-    actions.appendChild(btnShare);
-
-    if (company.taxId && location.protocol !== "file:") {
-      var btnLink = el("button", "btn");
-      btnLink.type = "button";
-      btnLink.innerHTML = ICONS.link + "<span>复制本条链接</span>";
-      btnLink.addEventListener("click", function () {
-        var url = location.origin + location.pathname + "#" + company.id;
-        copyWithFeedback(url, "已复制「" + company.tabName + "」专属链接");
-      });
-      actions.appendChild(btnLink);
-    }
-
-    actions.appendChild(el("div", "actions__spacer"));
-
-    var btnPrint = el("button", "btn btn--ghost");
-    btnPrint.type = "button";
-    btnPrint.innerHTML = ICONS.print + "<span>打印 / 存为 PDF</span>";
-    btnPrint.addEventListener("click", function () {
-      window.print();
-    });
-    actions.appendChild(btnPrint);
-
-    section.appendChild(actions);
-
-    section.setAttribute("aria-label", company.fullName + " 开票信息");
-    if (index === 0) section.setAttribute("data-first", "true");
-    return section;
+    return lines.length ? lines : [""];
   }
 
-  /* --------------------------------------------------------------- 初始化 */
+  var S = 3;              // 3 倍分辨率
+  var W = 700;            // 逻辑宽度
+  var PAD = 40;
+  var TITLE_LH = 34;
+  var VALUE_LH = 23;
+  var ROW_PAD = 11;
+
+  function buildCanvas(company) {
+    var blocks = blocksOf(company);
+    var m = document.createElement("canvas").getContext("2d");
+
+    var F = {
+      title: "800 23px " + FONT,
+      sub: "400 12px " + FONT,
+      idx: "500 11px " + MONO,
+      head: "700 12px " + FONT,
+      key: "400 12.5px " + FONT,
+      val: "400 14.5px " + FONT,
+      num: "400 14px " + MONO,
+      foot: "400 11.5px " + FONT,
+    };
+
+    var innerW = W - PAD * 2;
+    var valW = innerW - 112;
+
+    var titleLines = wrapLines(m, company.fullName, F.title, innerW);
+
+    var layout = blocks.map(function (b) {
+      var rows = b.rows.map(function (r) {
+        var font = r.account || r.mono ? F.num : F.val;
+        return {
+          k: r.k,
+          lines: wrapLines(m, displayOf(r), font, valW),
+          font: font,
+        };
+      });
+      var h = rows.reduce(function (sum, r) {
+        return sum + Math.max(r.lines.length * VALUE_LH, 20) + ROW_PAD * 2;
+      }, 0);
+      return { b: b, rows: rows, h: h };
+    });
+
+    var total =
+      PAD +
+      titleLines.length * TITLE_LH +
+      10 + 9 + 8 +      // 副标题 + 间距 + 黑色粗线
+      layout.reduce(function (s, x) { return s + 30 + 22 + x.h; }, 0) +
+      34 + 12 + 16;     // 页脚
+
+    var H = Math.ceil(total);
+    var canvas = document.createElement("canvas");
+    canvas.width = W * S;
+    canvas.height = H * S;
+
+    var ctx = canvas.getContext("2d");
+    ctx.scale(S, S);
+    ctx.textBaseline = "top";
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, W, H);
+
+    var y = PAD;
+
+    /* 标题 */
+    ctx.fillStyle = "#0a0a0a";
+    ctx.font = F.title;
+    titleLines.forEach(function (line) {
+      ctx.fillText(line, PAD, y);
+      y += TITLE_LH;
+    });
+
+    /* 副标题 */
+    y += 10;
+    ctx.fillStyle = "#8a8a8a";
+    ctx.font = F.sub;
+    ctx.fillText(SUBTITLE, PAD, y);
+    y += 9 + 8;
+
+    /* 标题下粗线 */
+    ctx.fillStyle = "#0a0a0a";
+    ctx.fillRect(PAD, y, innerW, 2);
+    y += 2;
+
+    /* 区块 */
+    layout.forEach(function (item, bi) {
+      y += 30;
+
+      var tone = TONE[item.b.tone] || "#9a9a9a";
+      ctx.fillStyle = tone;
+      ctx.font = F.idx;
+      ctx.fillText("0" + (bi + 1), PAD, y + 2);
+
+      ctx.fillStyle = "#0a0a0a";
+      ctx.font = F.head;
+      ctx.letterSpacing = "1.9px";
+      ctx.fillText(item.b.title, PAD + 22, y + 1);
+      var tw = ctx.measureText(item.b.title).width;
+      ctx.letterSpacing = "0px";
+
+      // 标题右侧延伸的细线
+      var lineX = PAD + 22 + tw + 12;
+      ctx.fillStyle = "#e4e4e4";
+      ctx.fillRect(lineX, y + 9, W - PAD - lineX, 1);
+
+      y += 22;
+
+      /* 行 */
+      item.rows.forEach(function (r) {
+        var blockH = Math.max(r.lines.length * VALUE_LH, 20) + ROW_PAD * 2;
+        var textY = y + ROW_PAD;
+
+        ctx.fillStyle = "#9a9a9a";
+        ctx.font = F.key;
+        ctx.fillText(r.k, PAD, textY + 2);
+
+        ctx.fillStyle = "#0a0a0a";
+        ctx.font = r.font;
+        r.lines.forEach(function (line, i) {
+          ctx.fillText(line, PAD + 112, textY + i * VALUE_LH);
+        });
+
+        y += blockH;
+        ctx.fillStyle = "#f0f0f0";
+        ctx.fillRect(PAD, y, innerW, 1);
+      });
+    });
+
+    /* 页脚 */
+    y += 34;
+    ctx.fillStyle = "#e4e4e4";
+    ctx.fillRect(PAD, y, innerW, 1);
+    y += 12;
+    ctx.fillStyle = "#9a9a9a";
+    ctx.font = F.foot;
+    wrapLines(m, FOOTER, F.foot, innerW).forEach(function (line, i) {
+      ctx.fillText(line, PAD, y + i * 17);
+    });
+
+    return canvas;
+  }
+
+  function copyImage(company) {
+    var canvas = buildCanvas(company);
+    canvas.toBlob(function (blob) {
+      if (!blob) { toast("生成图片失败"); return; }
+      if (navigator.clipboard && window.ClipboardItem) {
+        navigator.clipboard
+          .write([new window.ClipboardItem({ "image/png": blob })])
+          .then(function () { toast("图片已复制，可直接粘贴发送"); })
+          .catch(function () { download(blob, company); });
+      } else {
+        download(blob, company);
+      }
+    }, "image/png");
+  }
+
+  function download(blob, company) {
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = company.fullName + "-开票与收款信息.png";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+    toast("已下载图片（当前浏览器不支持直接复制图片）");
+  }
+
+  /* ---------------------------------------------------------------- 渲染 */
+
+  function buildPanel(c) {
+    var panel = el("section", "sheet");
+    panel.id = "panel-" + c.id;
+    panel.setAttribute("role", "tabpanel");
+    panel.setAttribute("aria-labelledby", "tab-" + c.id);
+    panel.setAttribute("data-company", c.id);
+    panel.tabIndex = 0;
+    panel.hidden = true;
+
+    var head = el("div", "sheet__head");
+    head.appendChild(el("h1", "sheet__title", c.fullName));
+    head.appendChild(el("p", "sheet__sub", SUBTITLE));
+    panel.appendChild(head);
+
+    blocksOf(c).forEach(function (b, i) {
+      var sec = el("section", "block");
+      sec.style.setProperty("--tone", TONE[b.tone] || "#9a9a9a");
+
+      var head = el("div", "block__head");
+      head.appendChild(el("span", "block__index", "0" + (i + 1)));
+      head.appendChild(el("h2", "block__name", b.title));
+      head.appendChild(el("span", "block__rule"));
+
+      var bc = el("button", "block__copy");
+      bc.type = "button";
+      bc.innerHTML = ICON.copy + "<span>复制</span>";
+      bc.title = "复制「" + b.title + "」整块";
+      bc.setAttribute("aria-label", "复制「" + b.title + "」整块");
+      bc.addEventListener("click", function () {
+        copyText(blockText(b), "已复制「" + b.title + "」", bc);
+      });
+      head.appendChild(bc);
+      sec.appendChild(head);
+
+      var body = el("div", "block__body");
+      b.rows.forEach(function (r) {
+        var row = el("div", "row");
+
+        row.appendChild(el("span", "row__k", r.k));
+
+        var v = el("span", "row__v" + (r.account || r.mono ? " row__v--mono" : ""), displayOf(r));
+        row.appendChild(v);
+
+        var rb = el("button", "row__copy");
+        rb.type = "button";
+        rb.innerHTML = ICON.copy;
+        rb.title = "复制" + r.k;
+        rb.setAttribute("aria-label", "复制" + r.k);
+        rb.addEventListener("click", function () {
+          copyText(copyOf(r), "已复制 " + r.k, rb);
+        });
+        row.appendChild(rb);
+
+        body.appendChild(row);
+      });
+      sec.appendChild(body);
+      panel.appendChild(sec);
+    });
+
+    panel.appendChild(el("p", "sheet__foot", FOOTER));
+    return panel;
+  }
+
+  /* ---------------------------------------------------------------- 启动 */
 
   function init() {
     var tabsBox = document.getElementById("tabs");
-    var panelsBox = document.getElementById("panels");
-    if (!tabsBox || !panelsBox) return;
+    var host = document.getElementById("panels");
+    if (!tabsBox || !host) return;
 
-    if (!companies.length) {
-      panelsBox.innerHTML =
-        '<div class="panel"><div class="empty">尚未配置公司开票信息，请在 <code>assets/js/data.js</code> 中补充。</div></div>';
+    var eyebrow = document.getElementById("site-title");
+    if (eyebrow && DATA.siteTitle) eyebrow.textContent = DATA.siteTitle;
+    var meta = document.getElementById("updated-at");
+    if (meta && DATA.updatedAt) meta.textContent = DATA.updatedAt;
+    if (DATA.siteSubtitle) document.title = DATA.siteTitle + " · " + DATA.siteSubtitle;
+
+    if (!COMPANIES.length) {
       tabsBox.hidden = true;
+      host.innerHTML = '<div class="empty">尚未配置开票信息，请在 assets/js/data.js 中补充。</div>';
       return;
     }
 
-    var tabs = [];
-    var panels = [];
+    var tabs = [], panels = [];
 
-    companies.forEach(function (company, index) {
-      // Tab
+    COMPANIES.forEach(function (c, i) {
       var tab = el("button", "tab");
       tab.type = "button";
-      tab.id = "tab-" + company.id;
+      tab.id = "tab-" + c.id;
       tab.setAttribute("role", "tab");
-      tab.setAttribute("aria-controls", "panel-" + company.id);
+      tab.setAttribute("aria-controls", "panel-" + c.id);
       tab.setAttribute("aria-selected", "false");
       tab.tabIndex = -1;
-      tab.setAttribute("data-company", company.id);
-
-      tab.appendChild(document.createTextNode(company.tabName || company.fullName));
-      if (company.tabMeta) tab.appendChild(el("small", "", company.tabMeta));
-      tab.addEventListener("click", function () {
-        activate(index, true);
-      });
+      tab.appendChild(document.createTextNode(c.tabName || c.fullName));
+      if (c.tabMeta) {
+        var small = el("small", null, c.tabMeta);
+        small.style.cssText = "font-size:11px;font-weight:400;letter-spacing:0;margin-left:6px;opacity:.7";
+        tab.appendChild(small);
+      }
+      tab.addEventListener("click", function () { activate(i, true); });
       tabsBox.appendChild(tab);
       tabs.push(tab);
 
-      // Panel
-      var panel = renderPanel(company, index);
-      panelsBox.appendChild(panel);
+      var panel = buildPanel(c);
+      host.appendChild(panel);
       panels.push(panel);
     });
 
-    /* 键盘导航：左右方向键 + Home / End */
-    tabsBox.addEventListener("keydown", function (event) {
-      var current = tabs.indexOf(document.activeElement);
-      if (current === -1) return;
+    tabsBox.addEventListener("keydown", function (e) {
+      var cur = tabs.indexOf(document.activeElement);
+      if (cur === -1) return;
       var next = null;
-      if (event.key === "ArrowRight") next = (current + 1) % tabs.length;
-      else if (event.key === "ArrowLeft") next = (current - 1 + tabs.length) % tabs.length;
-      else if (event.key === "Home") next = 0;
-      else if (event.key === "End") next = tabs.length - 1;
+      if (e.key === "ArrowRight") next = (cur + 1) % tabs.length;
+      else if (e.key === "ArrowLeft") next = (cur - 1 + tabs.length) % tabs.length;
+      else if (e.key === "Home") next = 0;
+      else if (e.key === "End") next = tabs.length - 1;
       if (next === null) return;
-      event.preventDefault();
+      e.preventDefault();
       activate(next, true);
       tabs[next].focus();
     });
 
-    var activeIndex = -1;
+    var current = -1;
 
-    function activate(index, updateHash) {
-      if (index < 0 || index >= companies.length) return;
-      if (index === activeIndex) {
-        if (updateHash) syncHash(index);
+    function activate(index, syncHash) {
+      if (index < 0 || index >= COMPANIES.length) return;
+      if (index === current) {
+        if (syncHash) setHash(index);
         return;
       }
-      activeIndex = index;
+      current = index;
 
-      tabs.forEach(function (tab, i) {
-        var selected = i === index;
-        tab.setAttribute("aria-selected", selected ? "true" : "false");
-        tab.tabIndex = selected ? 0 : -1;
+      tabs.forEach(function (t, i) {
+        var on = i === index;
+        t.setAttribute("aria-selected", on ? "true" : "false");
+        t.tabIndex = on ? 0 : -1;
       });
+      panels.forEach(function (p, i) { p.hidden = i !== index; });
 
-      // 只显示当前公司的面板，其余全部 hidden —— 信息严格隔离
-      panels.forEach(function (panel, i) {
-        panel.hidden = i !== index;
-      });
+      if (syncHash) setHash(index);
 
-      if (updateHash) syncHash(index);
-
-      // 切换后保证内容从顶部可见（移动端体验）
-      var panelTop = panels[index].getBoundingClientRect().top;
-      if (panelTop < 0) {
-        panels[index].scrollIntoView({ behavior: "smooth", block: "start" });
-      }
+      var top = panels[index].getBoundingClientRect().top;
+      if (top < 0) panels[index].scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
-    function syncHash(index) {
-      var id = companies[index].id;
+    function setHash(index) {
+      var id = COMPANIES[index].id;
       if (location.hash.slice(1) === id) return;
-      if (history.replaceState) {
-        history.replaceState(null, "", "#" + id);
-      } else {
-        location.hash = id;
-      }
+      if (history.replaceState) history.replaceState(null, "", "#" + id);
+      else location.hash = id;
     }
 
     function indexFromHash() {
       var id = decodeURIComponent(location.hash.replace(/^#/, ""));
       if (!id) return -1;
-      for (var i = 0; i < companies.length; i++) {
-        if (companies[i].id === id) return i;
+      for (var i = 0; i < COMPANIES.length; i++) {
+        if (COMPANIES[i].id === id) return i;
       }
       return -1;
     }
 
-    /* 首屏：优先按 URL 直达，其次默认公司，再次第一家 */
     var start = indexFromHash();
-    if (start === -1) {
-      for (var i = 0; i < companies.length; i++) {
-        if (companies[i].id === DATA.defaultCompanyId) start = i;
+    if (start === -1 && DATA.defaultCompanyId) {
+      for (var i = 0; i < COMPANIES.length; i++) {
+        if (COMPANIES[i].id === DATA.defaultCompanyId) start = i;
       }
     }
-    if (start === -1) start = 0;
-    activate(start, false);
+    activate(start === -1 ? 0 : start, false);
 
     window.addEventListener("hashchange", function () {
-      var index = indexFromHash();
-      if (index !== -1) activate(index, false);
+      var i = indexFromHash();
+      if (i !== -1) activate(i, false);
     });
 
-    // 页头信息
-    var title = document.getElementById("site-title");
-    var subtitle = document.getElementById("site-subtitle");
-    if (title && DATA.siteTitle) title.textContent = DATA.siteTitle;
-    if (subtitle && DATA.siteSubtitle) subtitle.textContent = DATA.siteSubtitle;
-    if (DATA.siteTitle) document.title = DATA.siteTitle + " · " + (DATA.siteSubtitle || "");
+    /* 底部操作条 */
+    var btnText = document.getElementById("btn-text");
+    var btnImage = document.getElementById("btn-image");
+    var btnDown = document.getElementById("btn-download");
 
-    var updated = document.getElementById("updated-at");
-    if (updated && DATA.updatedAt) updated.textContent = DATA.updatedAt;
+    if (btnText) {
+      btnText.innerHTML = ICON.text + "<span>复制全文</span>";
+      btnText.addEventListener("click", function () {
+        copyText(fullText(COMPANIES[current]), "已复制全部开票与收款信息");
+      });
+    }
+    if (btnImage) {
+      btnImage.innerHTML = ICON.image + "<span>复制图片</span>";
+      btnImage.addEventListener("click", function () {
+        copyImage(COMPANIES[current]);
+      });
+    }
+    if (btnDown) {
+      btnDown.innerHTML = ICON.download + "<span>下载图片</span>";
+      btnDown.addEventListener("click", function () {
+        var c = COMPANIES[current];
+        buildCanvas(c).toBlob(function (blob) { download(blob, c); }, "image/png");
+      });
+    }
   }
 
   if (document.readyState === "loading") {

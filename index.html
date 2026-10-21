@@ -3,70 +3,50 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#14508c" />
+    <meta name="theme-color" content="#0a0a0a" />
     <meta name="format-detection" content="telephone=no" />
     <!-- 内部资料，不参与搜索引擎收录 -->
     <meta name="robots" content="noindex, nofollow, noarchive" />
     <meta
       name="description"
-      content="公司开票信息一览：公司全称、纳税人识别号、注册地址与电话、开户银行与账号、可开具发票类型及对应税率。"
+      content="公司开票与收款信息：公司名称、纳税人识别号、注册地址与电话、开户银行与账号、可开具发票类型及税率，含对公与对私收款账户。"
     />
-    <meta property="og:title" content="开票信息" />
-    <meta
-      property="og:description"
-      content="请依照下列信息为您开具发票：公司全称、纳税人识别号、注册地址、开户银行与账号、发票类型及税率。"
-    />
-    <meta property="og:type" content="website" />
-    <title>开票信息</title>
+    <title>开票与收款信息</title>
 
     <link rel="stylesheet" href="assets/css/style.css" />
     <link
       rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2314508c'/%3E%3Cpath d='M11 8h10a2 2 0 0 1 2 2v14l-3-2-3 2-3-2-3 2V10a2 2 0 0 1 2-2z' fill='none' stroke='white' stroke-width='1.8' stroke-linejoin='round'/%3E%3Cpath d='M14 13h4M14 17h4' stroke='white' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230a0a0a'/%3E%3Cpath d='M12 9h8M12 14h8' stroke='white' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E"
     />
   </head>
 
   <body>
     <div class="page">
-      <!-- 页头 -->
       <header class="masthead">
-        <div class="mark" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">
-            <path d="M6 3h12a1 1 0 0 1 1 1v17l-3.5-2-3.5 2-3.5-2L5 21V4a1 1 0 0 1 1-1z" />
-            <path d="M9 8h6M9 12h6" stroke-linecap="round" />
-          </svg>
-        </div>
-        <div class="masthead__text">
-          <h1 class="masthead__title" id="site-title">开票信息</h1>
-          <p class="masthead__sub" id="site-subtitle">请依照下列信息为您开具发票</p>
-        </div>
-        <span class="masthead__badge"
-          ><i class="dot" aria-hidden="true"></i>财务信息 · 更新于 <span id="updated-at">2026-10</span></span
-        >
+        <p class="eyebrow">
+          <span id="site-title">开票与收款信息</span>
+          <span class="sep">·</span>INVOICE &amp; PAYMENT
+          <span class="sep">·</span><span id="updated-at">2026-10</span>
+        </p>
+        <nav class="tabs" id="tabs" role="tablist" aria-label="开票主体切换"></nav>
       </header>
 
-      <!-- 公司切换：不同公司的开票信息以 Tab 分区隔离 -->
-      <div class="switcher">
-        <span class="switcher__label">选择开票主体</span>
-        <div class="tabs" id="tabs" role="tablist" aria-label="开票主体切换"></div>
-      </div>
-
-      <!-- 各公司面板由 JS 依据 data.js 渲染 -->
+      <!-- 每家公司渲染为独立的 panel，切换时只显示其中一个 -->
       <main id="panels"></main>
-
-      <p class="footnote">
-        以上信息如有变更，以<strong>财务部门最新通知</strong>为准。<br />
-        请核对开票主体与合同签约主体一致后再行开票，如需协助请联系对接的业务人员。
-      </p>
     </div>
 
-    <!-- 复制结果提示 -->
-    <div class="toast" id="toast" role="status" aria-live="polite">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="m4 12.5 5 5L20 6.5" />
-      </svg>
-      <span data-toast-text>已复制</span>
+    <!-- 底部操作条 -->
+    <div class="dock" role="group" aria-label="复制与导出">
+      <button type="button" id="btn-text" class="is-primary">复制全文</button>
+      <button type="button" id="btn-image">复制图片</button>
+      <button type="button" id="btn-download">下载图片</button>
     </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite">已复制</div>
+
+    <noscript>
+      <div class="empty">请开启 JavaScript 以查看开票与收款信息。</div>
+    </noscript>
 
     <script src="assets/js/data.js"></script>
     <script src="assets/js/app.js"></script>
