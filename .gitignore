@@ -1,0 +1,15 @@
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# 编辑器
+.vscode/
+.idea/
+
+# EdgeOne CLI 本地凭据与缓存
+.edgeone/
+node_modules/
+*.log

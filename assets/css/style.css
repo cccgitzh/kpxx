@@ -1,0 +1,838 @@
+/* ==========================================================================
+   开票信息展示页 · Invoice Info
+   轻量、无依赖、响应式；所有样式以"信息层级清晰"为第一目标
+   ========================================================================== */
+
+:root {
+  --ink: #0c1a2b;
+  --text: #1b2b3c;
+  --text-soft: #4a5f75;
+  --muted: #7b8fa3;
+  --line: #e4eaf1;
+  --line-strong: #d2dbe6;
+
+  --brand: #14508c;
+  --brand-deep: #0d3862;
+  --brand-soft: #eef4fb;
+  --brand-tint: #f7fafd;
+  --gold: #a8823c;
+  --gold-soft: #fbf5e9;
+
+  --ok: #16794f;
+  --ok-soft: #eaf7f0;
+
+  --bg: #f4f6fa;
+  --card: #ffffff;
+
+  --radius-lg: 20px;
+  --radius: 14px;
+  --radius-sm: 10px;
+
+  --shadow-sm: 0 1px 2px rgba(16, 40, 70, 0.06);
+  --shadow: 0 6px 24px -8px rgba(16, 40, 70, 0.14), 0 1px 3px rgba(16, 40, 70, 0.05);
+  --shadow-lg: 0 24px 60px -24px rgba(13, 56, 98, 0.28), 0 2px 8px rgba(13, 56, 98, 0.06);
+
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+  --mono: "SF Mono", "JetBrains Mono", "Roboto Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font);
+  color: var(--text);
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(1200px 500px at 50% -260px, #e8f0fa 0%, rgba(232, 240, 250, 0) 70%),
+    radial-gradient(800px 400px at 100% 100%, #eef2f8 0%, rgba(238, 242, 248, 0) 65%);
+  background-repeat: no-repeat;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ---------------------------------------------------------------- 布局骨架 */
+
+.page {
+  width: 100%;
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 32px 22px 64px;
+}
+
+/* ------------------------------------------------------------------ 页头 */
+
+.masthead {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 4px 2px 22px;
+}
+
+.mark {
+  flex: none;
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  background: linear-gradient(150deg, var(--brand) 0%, var(--brand-deep) 100%);
+  box-shadow: 0 8px 18px -8px rgba(13, 56, 98, 0.55);
+  display: grid;
+  place-items: center;
+  color: #fff;
+}
+
+.mark svg {
+  width: 24px;
+  height: 24px;
+  display: block;
+}
+
+.masthead__text {
+  min-width: 0;
+}
+
+.masthead__title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+}
+
+.masthead__sub {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+.masthead__badge {
+  margin-left: auto;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-soft);
+  box-shadow: var(--shadow-sm);
+  white-space: nowrap;
+}
+
+.masthead__badge .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ok);
+  box-shadow: 0 0 0 3px var(--ok-soft);
+}
+
+/* -------------------------------------------------------------- 公司切换 */
+
+.switcher {
+  margin-bottom: 18px;
+}
+
+.switcher__label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin: 0 0 9px 4px;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 6px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.tab {
+  flex: 1 0 auto;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  min-width: 132px;
+  padding: 10px 16px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background: transparent;
+  color: var(--text-soft);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease,
+    box-shadow 0.18s ease, transform 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tab small {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+  transition: color 0.18s ease;
+}
+
+.tab:hover {
+  background: var(--brand-tint);
+  color: var(--brand);
+}
+
+.tab[aria-selected="true"] {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+  box-shadow: 0 8px 18px -10px rgba(13, 56, 98, 0.7);
+}
+
+.tab[aria-selected="true"] small {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.tab:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+/* -------------------------------------------------------------- 主卡片 */
+
+.panel {
+  position: relative;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  animation: panel-in 0.32s cubic-bezier(0.22, 0.68, 0.36, 1) both;
+}
+
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.panel:focus {
+  outline: none;
+}
+
+.panel__accent {
+  height: 4px;
+  background: linear-gradient(90deg, var(--brand) 0%, #3d7cc0 42%, var(--gold) 100%);
+}
+
+.panel__body {
+  padding: 26px 28px 8px;
+}
+
+/* ---------------------------------------------------- 公司名称主视觉区 */
+
+.identity {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--line);
+}
+
+.identity__main {
+  min-width: 0;
+  flex: 1;
+}
+
+.identity__flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  padding: 3px 9px;
+  border-radius: 6px;
+  background: var(--gold-soft);
+  border: 1px solid #f0e2c6;
+  color: var(--gold);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.company-name {
+  margin: 0;
+  font-size: clamp(20px, 3.4vw, 27px);
+  line-height: 1.32;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  word-break: break-word;
+}
+
+.company-en {
+  margin: 5px 0 0;
+  font-size: 12.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  word-break: break-word;
+}
+
+/* 纳税人识别号 —— 全页第二强的视觉锚点 */
+.taxid {
+  margin-top: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 100%;
+  padding: 11px 14px;
+  border-radius: var(--radius);
+  background: var(--brand-soft);
+  border: 1px solid #dbe7f4;
+}
+
+.taxid__label {
+  flex: none;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--brand);
+  opacity: 0.85;
+}
+
+.taxid__value {
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--brand-deep);
+  word-break: break-all;
+  line-height: 1.4;
+}
+
+/* -------------------------------------------------------- 信息字段网格 */
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2px;
+  margin: 4px 0 0;
+}
+
+.field {
+  position: relative;
+  padding: 17px 44px 17px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.field:nth-child(odd) {
+  padding-right: 30px;
+}
+
+.field--wide {
+  grid-column: 1 / -1;
+}
+
+.field__label {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.field__value {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.55;
+  word-break: break-word;
+}
+
+.field__value--mono {
+  font-family: var(--mono);
+  letter-spacing: 0.03em;
+  font-size: 14.5px;
+}
+
+.field__copy {
+  position: absolute;
+  right: 0;
+  bottom: 16px;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.16s ease, background 0.16s ease, color 0.16s ease,
+    border-color 0.16s ease;
+}
+
+.field:hover .field__copy,
+.field__copy:focus-visible {
+  opacity: 1;
+}
+
+.field__copy:hover {
+  background: var(--brand-soft);
+  border-color: #dbe7f4;
+  color: var(--brand);
+}
+
+.field__copy:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 1px;
+}
+
+.field__copy svg {
+  width: 15px;
+  height: 15px;
+  display: block;
+}
+
+.taxid .field__copy {
+  position: static;
+  opacity: 1;
+  margin-left: auto;
+  flex: none;
+  color: var(--brand);
+  border-color: #dbe7f4;
+  background: #fff;
+}
+
+.taxid .field__copy:hover {
+  background: var(--brand);
+  color: #fff;
+}
+
+/* ---------------------------------------------------------- 发票类型 */
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 26px 0 12px;
+}
+
+.section-head__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+}
+
+.section-head__hint {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.invoices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(232px, 1fr));
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.invoice {
+  position: relative;
+  padding: 14px 15px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, #fcfdff 0%, #fff 100%);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.invoice:hover {
+  border-color: #cfdcea;
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+.invoice__top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+
+.invoice__name {
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.4;
+}
+
+.invoice__rate {
+  margin-left: auto;
+  flex: none;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--brand-soft);
+  border: 1px solid #dbe7f4;
+  color: var(--brand-deep);
+  font-family: var(--mono);
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.invoice__desc {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text-soft);
+}
+
+.invoice__desc em {
+  font-style: normal;
+  color: var(--muted);
+}
+
+/* ------------------------------------------------------------ 备注区 */
+
+.notice {
+  display: flex;
+  gap: 10px;
+  margin: 20px 0 0;
+  padding: 13px 15px;
+  border-radius: var(--radius);
+  background: #fbfcfe;
+  border: 1px dashed var(--line-strong);
+}
+
+.notice svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  color: var(--gold);
+}
+
+.notice p {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--text-soft);
+}
+
+/* ---------------------------------------------------------- 操作栏 */
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 18px 28px 24px;
+  background: linear-gradient(180deg, #fbfcfe 0%, #f7f9fc 100%);
+  border-top: 1px solid var(--line);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 10px 17px;
+  border-radius: 10px;
+  border: 1px solid var(--line-strong);
+  background: #fff;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease,
+    box-shadow 0.16s ease, transform 0.1s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn svg {
+  width: 15px;
+  height: 15px;
+  flex: none;
+}
+
+.btn:hover {
+  border-color: #bccbdb;
+  background: #fbfcfe;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.btn--primary {
+  border-color: var(--brand);
+  background: var(--brand);
+  color: #fff;
+  box-shadow: 0 8px 18px -10px rgba(13, 56, 98, 0.7);
+}
+
+.btn--primary:hover {
+  border-color: var(--brand-deep);
+  background: var(--brand-deep);
+  color: #fff;
+}
+
+.btn--ghost {
+  border-color: transparent;
+  background: transparent;
+  color: var(--text-soft);
+}
+
+.btn--ghost:hover {
+  background: #eef2f7;
+  border-color: transparent;
+}
+
+.actions__spacer {
+  flex: 1;
+}
+
+/* ---------------------------------------------------------- 页脚提示 */
+
+.footnote {
+  margin: 22px 2px 0;
+  font-size: 12px;
+  line-height: 1.75;
+  color: var(--muted);
+  text-align: center;
+}
+
+.footnote strong {
+  color: var(--text-soft);
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------- Toast */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 32px;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 18px;
+  border-radius: 999px;
+  background: rgba(12, 26, 43, 0.94);
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 500;
+  box-shadow: 0 14px 34px -12px rgba(12, 26, 43, 0.6);
+  transform: translate(-50%, 14px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease, transform 0.22s ease;
+  backdrop-filter: blur(6px);
+  max-width: calc(100vw - 40px);
+}
+
+.toast[data-show="true"] {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.toast svg {
+  width: 15px;
+  height: 15px;
+  color: #6ee7b7;
+}
+
+/* ------------------------------------------------------- 空状态保护 */
+
+.empty {
+  padding: 60px 24px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* =========================================================== 响应式 */
+
+@media (max-width: 760px) {
+  .page {
+    padding: 20px 14px 48px;
+  }
+
+  .masthead {
+    padding-bottom: 18px;
+  }
+
+  .masthead__badge {
+    display: none;
+  }
+
+  .panel__body {
+    padding: 20px 18px 6px;
+  }
+
+  .actions {
+    padding: 16px 18px 20px;
+  }
+
+  .identity {
+    padding-bottom: 18px;
+  }
+
+  .fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .field,
+  .field:nth-child(odd) {
+    padding: 15px 38px 15px 0;
+  }
+
+  .field__copy {
+    opacity: 1;
+    bottom: 14px;
+  }
+
+  .field__value {
+    font-size: 14.5px;
+  }
+
+  .taxid {
+    display: flex;
+    width: 100%;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .taxid__label {
+    font-size: 11px;
+  }
+
+  .taxid__value {
+    font-size: 14.5px;
+  }
+
+  .invoices {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .actions .btn {
+    flex: 1 1 calc(50% - 5px);
+  }
+
+  .actions__spacer {
+    display: none;
+  }
+
+  .actions .btn--ghost {
+    flex-basis: 100%;
+  }
+}
+
+@media (max-width: 400px) {
+  .company-name {
+    font-size: 19px;
+  }
+
+  .tab {
+    min-width: 118px;
+    font-size: 13px;
+    padding: 9px 13px;
+  }
+}
+
+/* 降低动效偏好 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ============================================================ 打印 */
+
+@media print {
+  body {
+    background: #fff;
+  }
+
+  .page {
+    max-width: none;
+    padding: 0;
+  }
+
+  .switcher,
+  .actions,
+  .toast,
+  .masthead__badge,
+  .field__copy,
+  .taxid .field__copy {
+    display: none !important;
+  }
+
+  .panel {
+    border: none;
+    box-shadow: none;
+    animation: none;
+  }
+
+  .panel__body {
+    padding: 0;
+  }
+
+  .panel__accent {
+    display: none;
+  }
+
+  .footnote {
+    text-align: left;
+  }
+
+  .invoice {
+    break-inside: avoid;
+  }
+}

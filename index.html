@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#14508c" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta
+      name="description"
+      content="公司开票信息一览：公司全称、纳税人识别号、注册地址与电话、开户银行与账号、可开具发票类型及对应税率。"
+    />
+    <meta property="og:title" content="开票信息" />
+    <meta
+      property="og:description"
+      content="请依照下列信息为您开具发票：公司全称、纳税人识别号、注册地址、开户银行与账号、发票类型及税率。"
+    />
+    <meta property="og:type" content="website" />
+    <title>开票信息</title>
+
+    <link rel="stylesheet" href="assets/css/style.css" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2314508c'/%3E%3Cpath d='M11 8h10a2 2 0 0 1 2 2v14l-3-2-3 2-3-2-3 2V10a2 2 0 0 1 2-2z' fill='none' stroke='white' stroke-width='1.8' stroke-linejoin='round'/%3E%3Cpath d='M14 13h4M14 17h4' stroke='white' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E"
+    />
+  </head>
+
+  <body>
+    <div class="page">
+      <!-- 页头 -->
+      <header class="masthead">
+        <div class="mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">
+            <path d="M6 3h12a1 1 0 0 1 1 1v17l-3.5-2-3.5 2-3.5-2L5 21V4a1 1 0 0 1 1-1z" />
+            <path d="M9 8h6M9 12h6" stroke-linecap="round" />
+          </svg>
+        </div>
+        <div class="masthead__text">
+          <h1 class="masthead__title" id="site-title">开票信息</h1>
+          <p class="masthead__sub" id="site-subtitle">请依照下列信息为您开具发票</p>
+        </div>
+        <span class="masthead__badge"
+          ><i class="dot" aria-hidden="true"></i>财务信息 · 更新于 <span id="updated-at">2026-10</span></span
+        >
+      </header>
+
+      <!-- 公司切换：不同公司的开票信息以 Tab 分区隔离 -->
+      <div class="switcher">
+        <span class="switcher__label">选择开票主体</span>
+        <div class="tabs" id="tabs" role="tablist" aria-label="开票主体切换"></div>
+      </div>
+
+      <!-- 各公司面板由 JS 依据 data.js 渲染 -->
+      <main id="panels"></main>
+
+      <p class="footnote">
+        以上信息如有变更，以<strong>财务部门最新通知</strong>为准。<br />
+        请核对开票主体与合同签约主体一致后再行开票，如需协助请联系对接的业务人员。
+      </p>
+    </div>
+
+    <!-- 复制结果提示 -->
+    <div class="toast" id="toast" role="status" aria-live="polite">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="m4 12.5 5 5L20 6.5" />
+      </svg>
+      <span data-toast-text>已复制</span>
+    </div>
+
+    <script src="assets/js/data.js"></script>
+    <script src="assets/js/app.js"></script>
+  </body>
+</html>
