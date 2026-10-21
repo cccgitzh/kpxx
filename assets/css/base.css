@@ -1,0 +1,43 @@
+/* ==========================================================================
+   Base · 重置与全局排版
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--c-white);
+  color: var(--c-text);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* 标题与段落的具体间距由各自组件定义，这里只清掉浏览器默认值 */
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+/* 只继承字体族，不要用 font: inherit —— 它会把 line-height 一并改成继承值，
+   让按钮比原生高几像素，进而改变整页排版节奏 */
+button {
+  font-family: inherit;
+  color: inherit;
+}
+
+/* 键盘焦点统一交给各组件定义，避免与鼠标点击态冲突 */
+:focus:not(:focus-visible) {
+  outline: none;
+}

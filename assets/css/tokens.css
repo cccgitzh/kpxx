@@ -1,0 +1,78 @@
+/* ==========================================================================
+   Design Tokens
+   --------------------------------------------------------------------------
+   全站唯一的取值来源。组件样式只允许引用这里的变量，不再出现硬编码颜色/字号。
+   分组：色彩 · 字体 · 字号 · 间距 · 圆角与动效 · 尺寸
+   ========================================================================== */
+
+:root {
+  /* ---------------------------------------------------------------- 色彩 */
+  --c-white: #fff;
+  --c-black: #000;
+
+  --c-ink: #0a0a0a;        /* 标题、关键值 */
+  --c-text: #1a1a1a;       /* 正文 */
+  --c-muted: #9a9a9a;      /* 标签、次要文字 */
+  --c-muted-2: #8a8a8a;    /* 副标题 */
+  --c-icon: #c8c8c8;       /* 行内复制图标（默认态） */
+
+  --c-line: #f0f0f0;       /* 行分隔线 */
+  --c-line-strong: #e4e4e4;/* 区块标题细线、容器描边 */
+  --c-hover: #f5f5f5;      /* 图标按钮 hover 底色 */
+  --c-hover-soft: #f6f6f6; /* 底部操作条 hover 底色 */
+
+  /* 区块序号：全站唯一允许出现的彩色 */
+  --c-tone-one: #1266e3;
+  --c-tone-two: #12a94b;
+  --c-tone-thr: #f39200;
+  --c-tone-fallback: #9a9a9a;
+
+  --c-overlay: rgba(10, 10, 10, 0.95);
+  --shadow-dock: 0 14px 34px -20px rgba(0, 0, 0, 0.45);
+
+  /* ---------------------------------------------------------------- 字体 */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "SF Mono", "JetBrains Mono", "Roboto Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
+
+  /* ---------------------------------------------------------------- 字号 */
+  --fs-eyebrow: 11px;
+  --fs-tab: 13.5px;
+  --fs-tab-meta: 11px;
+  --fs-block-index: 11px;
+  --fs-block-name: 12px;
+  --fs-label: 12.5px;
+  --fs-value: 15px;
+  --fs-value-sm: 14.5px;   /* 手机端正文 */
+  --fs-value-mono: 14.5px;
+  --fs-sub: 12px;
+  --fs-foot: 11.5px;
+  --fs-action: 12.5px;
+  --fs-toast: 12.5px;
+
+  /* ---------------------------------------------------------------- 间距 */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 22px;
+  --sp-6: 24px;
+  --sp-7: 30px;
+  --sp-8: 34px;
+
+  /* -------------------------------------------------------- 圆角与动效 */
+  --radius: 3px;
+  --dur: 0.15s;
+  --dur-slow: 0.2s;
+  --ease: ease;
+
+  /* ---------------------------------------------------------------- 尺寸 */
+  --page-max: 760px;
+  --page-gutter: 24px;
+  --page-bottom: 132px;
+  --label-col: 108px;
+  --row-copy-col: 38px;
+  --dock-bottom: 22px;
+  --toast-bottom: 86px;
+}

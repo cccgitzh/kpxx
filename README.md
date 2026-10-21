@@ -32,14 +32,40 @@
 
 ```
 invoice-info/
-├── index.html              # 页面骨架（最后编写，依赖先就位）
+├── index.html                  # 页面骨架（只声明容器，不含渲染逻辑）
 ├── assets/
-│   ├── css/style.css       # 全部样式（含响应式与打印样式）
+│   ├── css/
+│   │   ├── tokens.css          # 设计令牌：颜色 / 字号 / 间距 / 圆角
+│   │   ├── base.css            # 重置与全局排版
+│   │   ├── layout.css          # 页面骨架、页头、Tab、纸面
+│   │   ├── components.css      # 区块、信息行、操作条、提示
+│   │   └── print.css           # 打印样式（仅打印时加载）
 │   └── js/
-│       ├── data.js         # ★ 唯一需要修改的数据文件
-│       └── app.js          # 渲染、复制、图片生成
+│       ├── data.js             # ★ 唯一需要修改的数据文件（普通脚本）
+│       ├── main.js             # 入口：读数据 → 建状态 → 接视图
+│       ├── core/               # 与业务无关的基础能力
+│       │   ├── dom.js          #   元素创建、事件绑定
+│       │   ├── format.js       #   账号 4 位分组
+│       │   ├── theme.js        #   从 CSS 读设计令牌（供 Canvas 用）
+│       │   ├── clipboard.js    #   写剪贴板 / 下载（含降级）
+│       │   ├── feedback.js     #   提示条 + 按钮对勾
+│       │   └── actions.js      #   "复制 + 反馈"组合动作
+│       ├── model/              # 数据与状态
+│       │   ├── normalize.js    #   原始数据 → 渲染模型
+│       │   ├── texts.js        #   纯文本序列化（复制出去的格式）
+│       │   └── store.js        #   当前公司状态 + 订阅
+│       ├── ui/                 # 视图
+│       │   ├── tabs.js         #   公司切换器（含键盘操作）
+│       │   ├── panel.js        #   公司面板（事件委托）
+│       │   ├── dock.js         #   底部操作条
+│       │   └── icons.js        #   内联 SVG 图标
+│       └── export/
+│           └── image.js        # Canvas 出图
 └── README.md
 ```
+
+依赖方向是单向的：`ui / export` → `model` → `core`，`main.js` 只做装配，
+因此改样式不会碰到数据，换数据也不用动渲染。
 
 ## 替换为真实信息
 
@@ -90,7 +116,8 @@ python -m http.server 8088
 # 打开 http://127.0.0.1:8088/
 ```
 
-> 复制图片与复制文本依赖 HTTPS 安全上下文；本地 `file://` 打开时「复制图片」会自动降级为下载。
+> 脚本使用 ES Module，**必须通过 http(s) 访问**；直接双击 `index.html`（`file://`）时模块不会执行，
+> 页面会显示一条提示而不是白屏。复制图片与复制文本依赖 HTTPS 安全上下文，`file://` 下「复制图片」会降级为下载。
 
 ## 部署
 

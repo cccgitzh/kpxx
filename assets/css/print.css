@@ -1,0 +1,38 @@
+/* ==========================================================================
+   Print · 打印 / 存为 PDF
+   以 media="print" 单独加载，屏幕下不解析，减少首屏成本。
+   ========================================================================== */
+
+@media print {
+  body {
+    background: var(--c-white);
+  }
+
+  .page {
+    max-width: none;
+    padding: 0;
+  }
+
+  /* 切换器、操作条、提示、复制按钮在纸上没有意义 */
+  .masthead,
+  .dock,
+  .toast,
+  .row__copy,
+  .block__copy {
+    display: none !important;
+  }
+
+  .sheet {
+    padding-top: 0;
+    animation: none;
+  }
+
+  .block,
+  .row {
+    break-inside: avoid;
+  }
+
+  .sheet__head {
+    border-bottom-width: 2px;
+  }
+}

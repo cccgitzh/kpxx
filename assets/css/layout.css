@@ -1,0 +1,155 @@
+/* ==========================================================================
+   Layout · 页面骨架、页头、主体切换、纸面
+   ========================================================================== */
+
+/* ------------------------------------------------------------------ 页面 */
+
+.page {
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: 0 var(--page-gutter) var(--page-bottom);
+}
+
+/* ------------------------------------------------------------------ 页头 */
+
+.masthead {
+  padding-top: var(--sp-7);
+}
+
+.eyebrow {
+  margin: 0 0 var(--sp-4);
+  font-size: var(--fs-eyebrow);
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  color: var(--c-muted);
+  text-transform: uppercase;
+}
+
+.eyebrow .sep {
+  margin: 0 6px;
+  opacity: 0.5;
+}
+
+/* -------------------------------------------------------------- 主体切换 */
+
+/* 极简 Tab：文字 + 下划线，不用胶囊背景 */
+.tabs {
+  display: flex;
+  gap: var(--sp-7);
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-bottom: 1px solid var(--c-line-strong);
+}
+
+.tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.tab {
+  position: relative;
+  flex: none;
+  padding: 0 0 11px;
+  margin-bottom: -1px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  font-size: var(--fs-tab);
+  font-weight: 500;
+  color: var(--c-muted);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tab:hover {
+  color: var(--c-ink);
+}
+
+.tab[aria-selected="true"] {
+  color: var(--c-ink);
+  font-weight: 700;
+  border-bottom-color: var(--c-ink);
+}
+
+.tab:focus-visible {
+  outline: 2px solid var(--c-ink);
+  outline-offset: 3px;
+}
+
+.tab__meta {
+  margin-left: 6px;
+  font-size: var(--fs-tab-meta);
+  font-weight: 400;
+  letter-spacing: 0;
+  opacity: 0.7;
+}
+
+/* ------------------------------------------------------------------ 纸面 */
+
+.sheet {
+  padding-top: var(--sp-7);
+  animation: sheet-in 0.26s ease both;
+}
+
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.sheet:focus {
+  outline: none;
+}
+
+.sheet__head {
+  padding-bottom: var(--sp-4);
+  border-bottom: 2px solid var(--c-ink);
+}
+
+.sheet__title {
+  font-size: clamp(21px, 3.4vw, 25px);
+  font-weight: 800;
+  line-height: 1.38;
+  letter-spacing: -0.015em;
+  color: var(--c-ink);
+  word-break: break-word;
+}
+
+.sheet__sub {
+  margin: 9px 0 0;
+  font-size: var(--fs-sub);
+  letter-spacing: 0.4px;
+  color: var(--c-muted-2);
+}
+
+/* -------------------------------------------------------------- 响应式 */
+
+@media (max-width: 640px) {
+  .page {
+    padding: 0 var(--sp-4) 120px;
+  }
+
+  .masthead {
+    padding-top: var(--sp-5);
+  }
+
+  .tabs {
+    gap: var(--sp-6);
+  }
+
+  .sheet {
+    padding-top: var(--sp-6);
+  }
+}
+
+@media (max-width: 380px) {
+  .sheet__title {
+    font-size: 20px;
+  }
+}
