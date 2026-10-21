@@ -4,6 +4,9 @@
 
 零依赖、零构建，纯静态 HTML / CSS / JS。
 
+- 代码仓库：<https://github.com/cccgitzh/kpxx>
+- 线上地址：<https://invoice-info.edgeone.cool>（EdgeOne Makers 项目 `invoice-info`）
+
 ## 功能
 
 - **多主体 Tab 切换**：桌面端等分排列，移动端横向滑动；支持 `←` `→` `Home` `End` 键盘导航，符合 WAI-ARIA Tabs 规范。
